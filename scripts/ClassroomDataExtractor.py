@@ -80,7 +80,7 @@ class GradeTable:
 
         return False
 
-    def extractActivityCsv(self, file_path: Path):
+    def parseActivityFile(self, file_path: Path):
         """
         Sobrenome, Nome, Endereço de e-mail, Nota, Status da atividade, Comentários
         """
@@ -122,7 +122,7 @@ class GradeTable:
 
         return activities
 
-    def extractTableToCsv(self):
+    def extractTableToCsv(self, result_path: Path):
         """
         STRUCTURE:
             [ Nome+Sobrenome,  email,  atividade 1,  atividade 2 ...  atividade N,  total ]
@@ -135,5 +135,6 @@ class GradeTable:
 
         # extrair
         df = pd.DataFrame(dataset_dict)
-        df.to_csv(path_or_buf=Path(__file__).parent / "result.csv")
+        
+        df.to_excel(result_path / "resultados.xlsx", sheet_name="notas", index=False)
 

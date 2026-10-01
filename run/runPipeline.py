@@ -1,9 +1,5 @@
 
-import os
 from pathlib import Path
-
-# fix root
-
 from scripts.ClassroomDataExtractor import GradeTable
 
 def run():
@@ -14,8 +10,9 @@ def run():
     grade_table = GradeTable()
 
     for file in folder.iterdir():
-        print(file)
-        grade_table.extractActivityCsv()
+        grade_table.parseActivityFile(file_path= file)
+
+    grade_table.extractTableToCsv(result_path= Path(__file__).parent)
 
 if __name__ == "__main__":
     run()
