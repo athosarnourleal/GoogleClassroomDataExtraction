@@ -135,6 +135,6 @@ class GradeTable:
 
         # extrair
         df = pd.DataFrame(dataset_dict)
-        
+
         df.to_excel(result_path / "resultados.xlsx", sheet_name="notas", index=False)
 
