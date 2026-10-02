@@ -22,13 +22,36 @@ def format_table(
         sheet: gspread.spreadsheet.Spreadsheet
     ) -> None:
 
-    start_row = 1
-    start_col = 0
+    position_range_header = gspread.utils.rowcol_to_a1(row=1, col=1) + ":" + gspread.utils.rowcol_to_a1(row=1, col=row_num)
 
-    position_range = gspread.utils.rowcol_to_a1(row=start_row+1, col=start_col+1) + ":" + gspread.utils.rowcol_to_a1(row=row_num+start_row, col=col_num+start_col)
+    # format header
+    spreadsheet.get_worksheet(0).format(position_range_header,
+    {
+            "verticalAlignment": "MIDDLE",
+            "horizontalAlignment": "CENTER",
+            "backgroundColor": {
+                "red": float(26/255),
+                "green": float(26/255),
+                "blue": float(50/255)
+            },
+            "textFormat": {
+                "foregroundColor": {
+                    "red": 1.0,
+                    "green": 1.0,
+                    "blue": 1.0
+                },
+                "fontSize": 9,
+                "bold": True
+            }
+        }
+    )
 
+    position_range = gspread.utils.rowcol_to_a1(row= 2  , col=1) + ":" + gspread.utils.rowcol_to_a1(row=row_num, col=col_num)
+
+    # format rows
     spreadsheet.get_worksheet(0).format(position_range,
     {
+            "verticalAlignment": "MIDDLE",
             "horizontalAlignment": "CENTER",
             "backgroundColor": {
                 "red": 1.0,
@@ -37,7 +60,7 @@ def format_table(
             },
             "textFormat": {
                 "foregroundColor": {
-                    "red": 1.0,
+                    "red": 0.0,
                     "green": 0.0,
                     "blue": 0.0
                 },
@@ -47,6 +70,26 @@ def format_table(
         }
     )
 
+    header_size_change_request = {
+        "requests": [
+            {
+                "updateDimensionProperties": {
+                    "range": {
+                        "sheetId": sheet.get_worksheet(0).id,
+                        "dimension": "ROWS",
+                        "startIndex": 0,
+                        "endIndex": 1
+                    },
+                    "properties": {
+                        "pixelSize": 50
+                    },
+                    "fields": "pixelSize"
+                }
+            }
+        ]
+    }
+    sheet.batch_update(header_size_change_request)
+
     row_size_change_request = {
         "requests": [
             {
@@ -54,8 +97,8 @@ def format_table(
                     "range": {
                         "sheetId": sheet.get_worksheet(0).id,
                         "dimension": "ROWS",
-                        "startIndex": start_row,
-                        "endIndex": row_num+start_row
+                        "startIndex": 1,
+                        "endIndex": row_num
                     },
                     "properties": {
                         "pixelSize": 30
@@ -65,8 +108,8 @@ def format_table(
             }
         ]
     }
-
     sheet.batch_update(row_size_change_request)
+
     col_size_change_request_names = {
         "requests": [
             {
@@ -74,8 +117,8 @@ def format_table(
                     "range": {
                         "sheetId": sheet.get_worksheet(0).id,
                         "dimension": "COLUMNS",
-                        "startIndex": start_col,
-                        "endIndex": start_col+3
+                        "startIndex": 0,
+                        "endIndex": 3
                     },
                     "properties": {
                         "pixelSize": 200
@@ -94,8 +137,8 @@ def format_table(
                     "range": {
                         "sheetId": sheet.get_worksheet(0).id,
                         "dimension": "COLUMNS",
-                        "startIndex": start_col+3,
-                        "endIndex": col_num+start_col
+                        "startIndex": 3,
+                        "endIndex": col_num
                     },
                     "properties": {
                         "pixelSize": 100
@@ -107,9 +150,12 @@ def format_table(
     }
     sheet.batch_update(col_size_change_request_activities)
 
-def insertData():
-    # TODO
-    pass
+def insertData(
+        worksheet: gspread.worksheet.Worksheet,
+        data: list[list], # 2d array
+    ) -> None:
+    range_positions = "A1:" + gspread.utils.rowcol_to_a1(len(data), len(data[0]))
 
-spreadsheet = connectToSpreadsheet()
-format_table(10, 10, spreadsheet)
+    worksheet.update(data, range_positions)
+
+
