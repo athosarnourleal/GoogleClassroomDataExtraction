@@ -2,6 +2,8 @@ import csv
 from pathlib import Path
 import pandas as pd
 
+import scripts.google_sheets as gs
+
 class GradeTable:
 
     def __init__(self):
@@ -122,7 +124,7 @@ class GradeTable:
 
         return activities
 
-    def extractTableToCsv(self, result_path: Path):
+    def exportTableToCsv(self, result_path: Path):
         """
         STRUCTURE:
             [ Nome+Sobrenome,  email,  atividade 1,  atividade 2 ...  atividade N,  total ]
@@ -137,4 +139,26 @@ class GradeTable:
         df = pd.DataFrame(dataset_dict)
 
         df.to_excel(result_path / "resultados.xlsx", sheet_name="notas", index=False)
+
+
+    def exportTableToGoogleSheets(self):
+        """
+        HEADER STRUCTURE:
+            [ Nome+Sobrenome,  email,  atividade 1,  atividade 2 ...  atividade N,  total ]
+        """
+
+        finished_table = [["nome do aluno", "email"] + [ativ for ativ in self.ACTIVITY_NAMES]]
+
+        for i in range(len(self.STUDENT_EMAILS)):
+            row = [self.STUDENT_NAMES[i], self.STUDENT_EMAILS[i]] + self.DATABASE[i]
+            finished_table.append(row)
+
+        sheet = gs.connectToSpreadsheet()
+
+        gs.format_table(row_num= len(finished_table), col_num= len(finished_table[0]), sheet= sheet)
+
+        gs.insertData(sheet.get_worksheet(0), finished_table)
+
+
+
 

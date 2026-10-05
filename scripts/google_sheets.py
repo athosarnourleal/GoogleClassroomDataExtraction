@@ -2,9 +2,13 @@ import gspread
 from pathlib import Path
 from google.oauth2.service_account import Credentials
 
-def connectToSpreadsheet(
-        sheet_id: str = "1BagQlqKf07k6ByUVKWyFsetI2U2syr_X1q1Hf4HjyUE"
-    ):
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+sheet_id = os.environ["GOOGLE_SHEET_ID"]
+
+def connectToSpreadsheet():
 
     # client setup
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
@@ -22,10 +26,10 @@ def format_table(
         sheet: gspread.spreadsheet.Spreadsheet
     ) -> None:
 
-    position_range_header = gspread.utils.rowcol_to_a1(row=1, col=1) + ":" + gspread.utils.rowcol_to_a1(row=1, col=row_num)
+    position_range_header = gspread.utils.rowcol_to_a1(row=1, col=1) + ":" + gspread.utils.rowcol_to_a1(row=1, col=col_num)
 
     # format header
-    spreadsheet.get_worksheet(0).format(position_range_header,
+    sheet.get_worksheet(0).format(position_range_header,
     {
             "verticalAlignment": "MIDDLE",
             "horizontalAlignment": "CENTER",
@@ -47,16 +51,15 @@ def format_table(
     )
 
     position_range = gspread.utils.rowcol_to_a1(row= 2  , col=1) + ":" + gspread.utils.rowcol_to_a1(row=row_num, col=col_num)
-
     # format rows
-    spreadsheet.get_worksheet(0).format(position_range,
+    sheet.get_worksheet(0).format(position_range,
     {
             "verticalAlignment": "MIDDLE",
             "horizontalAlignment": "CENTER",
             "backgroundColor": {
                 "red": 1.0,
-                "green": 0.95,
-                "blue": 0.95
+                "green": 1.0,
+                "blue": 1.0
             },
             "textFormat": {
                 "foregroundColor": {
@@ -70,6 +73,7 @@ def format_table(
         }
     )
 
+    # resize header
     header_size_change_request = {
         "requests": [
             {
@@ -90,6 +94,7 @@ def format_table(
     }
     sheet.batch_update(header_size_change_request)
 
+    # resize other rows
     row_size_change_request = {
         "requests": [
             {
@@ -110,6 +115,7 @@ def format_table(
     }
     sheet.batch_update(row_size_change_request)
 
+    # resize the initial cols
     col_size_change_request_names = {
         "requests": [
             {
@@ -118,10 +124,10 @@ def format_table(
                         "sheetId": sheet.get_worksheet(0).id,
                         "dimension": "COLUMNS",
                         "startIndex": 0,
-                        "endIndex": 3
+                        "endIndex": 2
                     },
                     "properties": {
-                        "pixelSize": 200
+                        "pixelSize": 300
                     },
                     "fields": "pixelSize"
                 }
@@ -130,6 +136,7 @@ def format_table(
     }
     sheet.batch_update(col_size_change_request_names)
 
+    # resize the activity cols
     col_size_change_request_activities = {
         "requests": [
             {
@@ -137,11 +144,11 @@ def format_table(
                     "range": {
                         "sheetId": sheet.get_worksheet(0).id,
                         "dimension": "COLUMNS",
-                        "startIndex": 3,
+                        "startIndex": 2,
                         "endIndex": col_num
                     },
                     "properties": {
-                        "pixelSize": 100
+                        "pixelSize": 200
                     },
                     "fields": "pixelSize"
                 }

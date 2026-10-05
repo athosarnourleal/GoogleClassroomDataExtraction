@@ -2,17 +2,15 @@
 from pathlib import Path
 from scripts.ClassroomDataExtractor import GradeTable
 
-def run():
+def runExtraction(folder_path : Path | str):
     print("running")
-
-    folder = Path(__file__).parent.parent / "activities"
 
     grade_table = GradeTable()
 
-    for file in folder.iterdir():
+    for file in Path(folder_path).iterdir():
         grade_table.parseActivityFile(file_path= file)
 
-    grade_table.extractTableToCsv(result_path= Path(__file__).parent)
+    grade_table.exportTableToGoogleSheets()
 
 if __name__ == "__main__":
-    run()
+    runExtraction(Path(__file__).parent.parent / "activities")
