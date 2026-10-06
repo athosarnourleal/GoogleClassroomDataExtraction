@@ -82,16 +82,16 @@ class GradeTable:
 
         return False
 
-    def parseActivityFile(self, file_path: Path):
+    def parseActivityFile(self, file_path: Path) -> bool:
         """
         Sobrenome, Nome, Endereço de e-mail, Nota, Status da atividade, Comentários
         """
 
         if file_path.suffix != ".csv":
             print(f"file {file_path.name} cant be parsed")
-            return
+            return False
 
-        # get table name and add
+        # get table name and add if it doesnt exist
         activity_name = file_path.name.replace("_", " ").removesuffix(".csv").upper()
         if activity_name not in self.ACTIVITY_NAMES:
             self.addActivity(activity_name= activity_name)
@@ -111,6 +111,8 @@ class GradeTable:
 
                 self.insertData(new_data=grade, student_email=email, activity_name=activity_name)
 
+        return True
+
     def getActivitiesCollumns(self) -> dict:
         activities = {}
 
@@ -120,7 +122,7 @@ class GradeTable:
             for line in range(len(self.DATABASE)):
                 atv_grades.append(self.DATABASE[line][index])
 
-            activities.update({atv: atv_grades})
+            activities.update({ atv: atv_grades })
 
         return activities
 
@@ -139,6 +141,27 @@ class GradeTable:
         df = pd.DataFrame(dataset_dict)
 
         df.to_excel(result_path / "resultados.xlsx", sheet_name="notas", index=False)
+
+    def joinActivities(self, activity_name1: str, activity_name2: str) -> bool:
+        activity_name1 = activity_name1.strip().upper()
+        activity_name2 = activity_name2.strip().upper()
+
+        if activity_name1 not in self.ACTIVITY_NAMES or activity_name2 not in self.ACTIVITY_NAMES:
+            return False
+
+        # TODO
+
+        return True
+
+    def importDataFromFile(self, folder_path: Path | str) -> bool:
+
+        for file in Path(folder_path).iterdir():
+            status: bool = self.parseActivityFile(file_path=file)
+
+            if status is False:
+                return False
+
+        return True
 
 
     def exportTableToGoogleSheets(self):
@@ -160,5 +183,5 @@ class GradeTable:
         gs.insertData(sheet.get_worksheet(0), finished_table)
 
 
-
+grade_table = GradeTable()
 
