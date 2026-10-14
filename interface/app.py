@@ -40,28 +40,32 @@ if join1 is not None and join2 is not None and st.button("unir", key= "join inpu
 
     if status is True:
         st.success("união feita com sucesso!")
-    elif status is str:
+    elif type(status) is str:
         st.error("ERRO: "+status)
     else:
-        st.error("ERRO EXISTENTE-- REVISE CÓDIGO")
+        st.error(f"ERRO EXISTENTE-- REVISE CÓDIGO OUTPUT: {status}")
 
 # draw all activities by name that are present in the grade table
 
+st.dataframe(grade_table.TABLE)
+
 google_sheet_link = st.text_input("insira o link da planilha google sheets")
 
-if st.button("export to google sheet"):
+if google_sheet_link is not None and st.button("exportar"): #st.button("export to google sheet"):
     # and google_sheet_link:
     grade_table.exportTableToGoogleSheets("")
 
-col1, col2 = st.columns(2)
-with col1:
-    if len(grade_table.STUDENT_NAMES) > 0:
-        st.write("### alunos:")
-        for stu_name in grade_table.STUDENT_NAMES:
-            st.text(stu_name)
-with col2:
-    if len(grade_table.ACTIVITY_NAMES) > 0:
-        st.write("### atividades:")
-
-        boxes = [st.checkbox(ativ, value=True) for ativ in grade_table.ACTIVITY_NAMES]
+#
+# col1, col2 = st.columns(2)
+# with col1:
+#     if len(grade_table.TABLE["STUDENT NAMES"]) > 0:
+#         st.write("### alunos:")
+#         for stu_name in grade_table.TABLE["STUDENT NAMES"]:
+#             st.text(stu_name)
+# with col2:
+#     if len(list(grade_table.TABLE.columns.array)[1:]) > 0:
+#         st.write("### atividades:")
+#
+#         boxes = [st.checkbox(ativ, value=True) for ativ in list(grade_table.TABLE.columns.array)[1:]]
+#
 

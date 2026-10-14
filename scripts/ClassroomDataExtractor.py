@@ -8,7 +8,7 @@ from scripts.google_sheets import format_table, connectToSpreadsheet, insertData
 class GradeTablePandas:
 
     def __init__(self):
-        self.TABLE = pd.DataFrame({"STUDENT NAME": []})
+        self.TABLE = pd.DataFrame({"STUDENT NAMES": []})
 
         # rows --> ALUNOS_NOME
         # columns --> ATIVIDADES_NOME
@@ -21,7 +21,7 @@ class GradeTablePandas:
         student_email = student_email.strip()
 
         self.TABLE.loc[student_email] = pd.Series()
-        self.TABLE.at[student_email, "STUDENT NAME"] = student_name
+        self.TABLE.at[student_email, "STUDENT NAMES"] = student_name
 
     def addActivity(self, activity_name: str) -> None:
         if activity_name in self.TABLE.columns:
@@ -46,16 +46,16 @@ class GradeTablePandas:
         # insert
         previous: str = self.TABLE.at[student_email, activity_name]
 
-        if previous == new_data or pd.isnull(previous):
+        if previous == new_data or pd.isnull(previous) or pd.isna(previous):
             # place value to a slot
             self.TABLE.at[student_email, activity_name] = new_data
 
         elif float(previous) == 0.0:
             # replace a slot when value is 0
-            print(
-                f"replaced the grade from student '{student_email}' of the activity '{activity_name}' from {previous} to {new_data}")
+            print(f"replaced the grade from student '{student_email}' of the activity '{activity_name}' from {previous} to {new_data}")
             self.TABLE.at[student_email, activity_name] = new_data
-        else:
+
+        elif pd.isnull(new_data) == False and pd.isna(new_data) == False:
             # confirm to replace slot
             response = input(
                 f"system wants to replace the grade from student '{student_email}' of the activity '{activity_name}' from '{previous}' to '{new_data}', is it ok?[s/n]"
