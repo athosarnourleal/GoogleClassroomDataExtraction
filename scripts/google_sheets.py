@@ -6,17 +6,15 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-sheet_id = os.environ["GOOGLE_SHEET_ID"]
-
-def connectToSpreadsheet():
+def connectToSpreadsheet(spreadsheet_link: str):
 
     # client setup
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-    creds = Credentials.from_service_account_file(str(Path(__file__).parent.parent / "credentials.json"), scopes= scopes)
+    creds = Credentials.from_service_account_file(str(Path(__file__).parent.parent / "credentials_sheets.json"), scopes= scopes)
     client = gspread.authorize(creds)
 
     # accessing worksheet
-    sheet = client.open_by_key(sheet_id)
+    sheet = client.open_by_url(spreadsheet_link)
 
     return sheet
 
@@ -159,7 +157,7 @@ def format_table(
 
 def insertData(
         worksheet: gspread.worksheet.Worksheet,
-        data: list[list], # 2d array
+        data, # 2d array
     ) -> None:
     range_positions = "A1:" + gspread.utils.rowcol_to_a1(len(data), len(data[0]))
 

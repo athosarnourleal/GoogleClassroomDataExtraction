@@ -1,68 +1,60 @@
 import csv
 from pathlib import Path
+import numpy as np
 import pandas as pd
 
-import scripts.google_sheets as gs
+from scripts.google_sheets import format_table, connectToSpreadsheet, insertData
 
-class GradeTable:
+class GradeTablePandas:
 
     def __init__(self):
-        self.STUDENT_EMAILS = [] # será usado como "primary key"
-        self.STUDENT_NAMES = []
-        self.ACTIVITY_NAMES = []
-        self.DATABASE = [[]] # 2d array
+        self.TABLE = pd.DataFrame({"STUDENT NAME": []})
 
         # rows --> ALUNOS_NOME
         # columns --> ATIVIDADES_NOME
 
     def addStudent(self, student_name: str, student_surname: str, student_email: str):
-        if student_email in self.STUDENT_EMAILS:
+        if student_email in self.TABLE.index:
             return
 
-        if len(student_name) == 0 | len(student_name.strip()) == 0:
-            raise Exception(f"INSERTED STUDENT({student_email}) DOES NOT HAVE A NAME.")
+        student_name = student_name.title().strip() + " " + student_surname.title().strip()
+        student_email = student_email.strip()
 
-        self.STUDENT_NAMES.append(student_name.strip().title() + " " + student_surname.strip().title())
-        self.STUDENT_EMAILS.append(student_email)
-
-        if len(self.DATABASE) == len(self.STUDENT_EMAILS):
-            # avoid creating extra lines
-            return
-
-        # add a new line
-        self.DATABASE.append(['' for i in range(len(self.DATABASE[0]))])
+        self.TABLE.loc[student_email] = pd.Series()
+        self.TABLE.at[student_email, "STUDENT NAME"] = student_name
 
     def addActivity(self, activity_name: str) -> None:
-        if activity_name in self.ACTIVITY_NAMES:
+        if activity_name in self.TABLE.columns:
             return
 
-        self.ACTIVITY_NAMES.append(activity_name.strip().upper())
+        self.TABLE[activity_name] = [None]*len(self.TABLE)
 
-        # add a new collumn
-        for i in range(len(self.DATABASE)):
-            self.DATABASE[i].append("")
+    def insertData(self,
+           new_data: str | int | float,
+           student_email: str,
+           activity_name: str
+       ) -> None:
 
-    def insertData(self, new_data: str | int | float, student_email: str, activity_name: str) -> None:
-        if student_email not in self.STUDENT_EMAILS:
+        if new_data == '': # avoid other types of nan
+            new_data = np.nan
+
+        if student_email not in self.TABLE.index:
             raise Exception(f"STUDENT({student_email}) IS NOT IN DATABASE.")
-        elif activity_name not in self.ACTIVITY_NAMES:
+        elif activity_name not in self.TABLE.columns:
             raise Exception(f"ACTIVITY({activity_name}) IS NOT IN DATABASE.")
 
-        # get position
-        row_num = self.STUDENT_EMAILS.index(student_email)
-        col_num = self.ACTIVITY_NAMES.index(activity_name)
-
         # insert
-        previous: str = self.DATABASE[row_num][col_num]
-        if self.isEmpty(previous):
+        previous: str = self.TABLE.at[student_email, activity_name]
+
+        if previous == new_data or pd.isnull(previous):
             # place value to a slot
-            self.DATABASE[row_num][col_num] = new_data
+            self.TABLE.at[student_email, activity_name] = new_data
 
-        elif int(previous) == 0.0:
+        elif float(previous) == 0.0:
             # replace a slot when value is 0
-            print(f"replaced the grade from student '{student_email}' of the activity '{activity_name}' from {previous} to {new_data}")
-            self.DATABASE[row_num][col_num] = new_data
-
+            print(
+                f"replaced the grade from student '{student_email}' of the activity '{activity_name}' from {previous} to {new_data}")
+            self.TABLE.at[student_email, activity_name] = new_data
         else:
             # confirm to replace slot
             response = input(
@@ -70,19 +62,12 @@ class GradeTable:
             )
 
             if response.upper() == "S":
-                self.DATABASE[row_num][col_num] = new_data
+                self.TABLE.at[student_email, activity_name] = new_data
                 print("grade was SUCCESSFULLY replaced!")
             else:
                 print("grade was NOT replaced!")
 
-    @staticmethod
-    def isEmpty(slot) -> bool:
-        if slot is None or len(slot) == 0 or str(slot).strip() == "" or int(slot) == 0.0:
-            return True
-
-        return False
-
-    def parseActivityFile(self, file_path: Path) -> bool:
+    def parseSingleActivityFile(self, file_path: Path) -> bool:
         """
         Sobrenome, Nome, Endereço de e-mail, Nota, Status da atividade, Comentários
         """
@@ -92,8 +77,9 @@ class GradeTable:
             return False
 
         # get table name and add if it doesnt exist
+
         activity_name = file_path.name.replace("_", " ").removesuffix(".csv").upper()
-        if activity_name not in self.ACTIVITY_NAMES:
+        if activity_name not in self.TABLE.columns:
             self.addActivity(activity_name= activity_name)
 
         with open(str(file_path), 'r') as csvfile:
@@ -106,82 +92,78 @@ class GradeTable:
                 grade = row[3]
 
                 # add student if not in database
-                if email not in self.STUDENT_EMAILS:
+                if email not in self.TABLE.index:
                     self.addStudent(student_name=row[1], student_surname=row[0], student_email=email)
 
                 self.insertData(new_data=grade, student_email=email, activity_name=activity_name)
 
         return True
 
-    def getActivitiesCollumns(self) -> dict:
-        activities = {}
-
-        for index, atv in enumerate(self.ACTIVITY_NAMES):
-            atv_grades = []
-
-            for line in range(len(self.DATABASE)):
-                atv_grades.append(self.DATABASE[line][index])
-
-            activities.update({ atv: atv_grades })
-
-        return activities
-
     def exportTableToCsv(self, result_path: Path):
-        """
-        STRUCTURE:
-            [ Nome+Sobrenome,  email,  atividade 1,  atividade 2 ...  atividade N,  total ]
-        """
+        self.TABLE.to_excel(result_path / "resultados.csv", sheet_name="notas", index=False)
 
-        dataset_dict = {"NOME DO ALUNO": self.STUDENT_NAMES, "EMAIL DO ALUNO": self.STUDENT_EMAILS}
-
-        # add activities part of the spreadsheet
-        dataset_dict.update(self.getActivitiesCollumns())
-
-        # extrair
-        df = pd.DataFrame(dataset_dict)
-
-        df.to_excel(result_path / "resultados.xlsx", sheet_name="notas", index=False)
-
-    def joinActivities(self, activity_name1: str, activity_name2: str) -> bool:
+    def joinActivities(self, activity_name1: str, activity_name2: str) -> bool | str:
         activity_name1 = activity_name1.strip().upper()
         activity_name2 = activity_name2.strip().upper()
 
-        if activity_name1 not in self.ACTIVITY_NAMES or activity_name2 not in self.ACTIVITY_NAMES:
-            return False
+        if (activity_name1 not in self.TABLE.columns
+                or activity_name2 not in self.TABLE.columns):
+            return "atividade não encontrada."
 
-        # TODO
+        for index in self.TABLE.index:
+            previous = self.TABLE.at[index, activity_name1]
+
+            if pd.isnull(previous) or pd.isna(previous) or float(previous) == 0.0:
+                self.TABLE.at[index, activity_name1] = self.TABLE.at[index, activity_name2]
+
+        self.TABLE.drop(activity_name2, axis="columns", inplace= True)
 
         return True
 
-    def importDataFromFile(self, folder_path: Path | str) -> bool:
+    def importDataFromFile(self, folder_path: Path | str) -> list[int]:
+        file_number: int = 0
+        files_found: int = 0
 
         for file in Path(folder_path).iterdir():
-            status: bool = self.parseActivityFile(file_path=file)
+            successfully_imported: bool = self.parseSingleActivityFile(file_path=file)
 
-            if status is False:
-                return False
+            if successfully_imported:
+                files_found += 1
 
-        return True
+            file_number += 1
 
+        return [files_found, file_number]
 
-    def exportTableToGoogleSheets(self):
+    def exportTableToGoogleSheets(self, google_sheet_link: str) -> str | bool:
         """
         HEADER STRUCTURE:
             [ Nome+Sobrenome,  email,  atividade 1,  atividade 2 ...  atividade N,  total ]
         """
 
-        finished_table = [["nome do aluno", "email"] + [ativ for ativ in self.ACTIVITY_NAMES]]
+        if len(self.TABLE.index) == 0 or len(self.TABLE.columns) == 0:
+            return "unable to export"
 
-        for i in range(len(self.STUDENT_EMAILS)):
-            row = [self.STUDENT_NAMES[i], self.STUDENT_EMAILS[i]] + self.DATABASE[i]
-            finished_table.append(row)
+        sheet = connectToSpreadsheet(google_sheet_link)
 
-        sheet = gs.connectToSpreadsheet()
+        format_table(row_num=len(list(self.TABLE.index.array))+1, col_num=len(list(self.TABLE.columns.array)), sheet=sheet)
 
-        gs.format_table(row_num= len(finished_table), col_num= len(finished_table[0]), sheet= sheet)
+        table_cleaned = self.TABLE.fillna('0.0')
+        formatted_table = [list(table_cleaned.columns.array)] + [list(table_cleaned.loc[row]) for row in list(table_cleaned.index)]
 
-        gs.insertData(sheet.get_worksheet(0), finished_table)
+        print(formatted_table)
+
+        insertData(sheet.get_worksheet(0), formatted_table)
+
+        return True
 
 
-grade_table = GradeTable()
+
+grade_table = GradeTablePandas()
+
+if __name__ == "__main__":
+    grade_table.importDataFromFile("/home/athos/PycharmProjects/GoogleClassroomDataExtraction/activities")
+
+    grade_table.joinActivities("AOC AMBIENTES X86 X ARM SUB B","ATIVIDADE TESTE 1")
+
+    grade_table.exportTableToGoogleSheets("https://docs.google.com/spreadsheets/d/1BagQlqKf07k6ByUVKWyFsetI2U2syr_X1q1Hf4HjyUE/edit?gid=0#gid=0")
 
