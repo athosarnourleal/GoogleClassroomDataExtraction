@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from scripts.google_sheets import format_table, connectToSpreadsheet, insertData
+from scripts.google_sheets_connection import format_table, connectToSpreadsheet, insertData
 
 class GradeTablePandas:
 
@@ -66,6 +66,7 @@ class GradeTablePandas:
                 print("grade was SUCCESSFULLY replaced!")
             else:
                 print("grade was NOT replaced!")
+
 
     def parseSingleActivityFile(self, file_path: Path) -> bool:
         """
@@ -155,8 +156,6 @@ class GradeTablePandas:
         insertData(sheet.get_worksheet(0), formatted_table)
 
         return True
-
-
 
 grade_table = GradeTablePandas()
 

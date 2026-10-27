@@ -1,11 +1,14 @@
 import streamlit as st
 from pathlib import Path
 import sys
+import tempfile
+import os
+
+from streamlit.runtime.uploaded_file_manager import UploadedFile
 
 sys.path.append(str(Path(__file__).parent.parent))
 
 from scripts.ClassroomDataExtractor import grade_table
-
 
 st.set_page_config(layout="wide")
 
@@ -19,13 +22,16 @@ folder_path: str | None = st.text_input("caminho para o diretorio que os arquivo
 
 if folder_path is not None and st.button("process", key="submit button"):
     find_rate: list = grade_table.importDataFromFile(folder_path)
-
+    
     if find_rate[0] == find_rate[1]:
         st.success("done!")
     else:
         st.success(f"done! imported {find_rate[0]} / {find_rate[1]} files")
 
 # add part to join activities
+if len(grade_table.TABLE) > 0:
+    st.write("## tabela")
+    st.dataframe(grade_table.TABLE)
 
 st.write("### unir atividades")
 
@@ -44,8 +50,6 @@ if join1 is not None and join2 is not None and st.button("unir", key= "join inpu
         st.error("ERRO: "+status)
 
 # draw all activities by name that are present in the grade table
-
-st.dataframe(grade_table.TABLE)
 
 google_sheet_link = st.text_input("insira o link da planilha google sheets")
 

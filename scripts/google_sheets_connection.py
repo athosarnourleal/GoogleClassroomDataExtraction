@@ -1,20 +1,30 @@
+
 import gspread
 from pathlib import Path
+
 from google.oauth2.service_account import Credentials
 
-import os
 from dotenv import load_dotenv
 load_dotenv()
 
 def connectToSpreadsheet(spreadsheet_link: str):
 
     # client setup
-    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-    creds = Credentials.from_service_account_file(str(Path(__file__).parent.parent / "credentials_sheets.json"), scopes= scopes)
+    scopes = [
+        "https://www.googleapis.com/auth/spreadsheets"
+    ]
+
+    credentials_path = Path(__file__).parent.parent / "google credentials" / "credentials_service_googleSheets.json"
+
+    if not credentials_path.exists():
+        raise "google sheets service account credentials does not exist."
+
+    creds = Credentials.from_service_account_file(str(credentials_path), scopes= scopes)
+    # creds = Credentials.from_authorized_user_file(str(credentials_path))
     client = gspread.authorize(creds)
 
     # accessing worksheet
-    sheet = client.open_by_url(spreadsheet_link)
+    sheet = client.open_by_url(spreadsheet_link) # access token ur
 
     return sheet
 
