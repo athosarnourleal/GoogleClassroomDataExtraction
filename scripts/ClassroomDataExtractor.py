@@ -48,7 +48,7 @@ class GradeTablePandas:
 
     def exportTableToGoogleSheets(
             self,
-            google_sheet_link: str = "https://docs.google.com/spreadsheets/d/1BagQlqKf07k6ByUVKWyFsetI2U2syr_X1q1Hf4HjyUE/edit?gid=0#gid=0",
+            google_sheet_link: str,
             sheet_title: str = "NOTAS"
         ) -> str | bool:
 

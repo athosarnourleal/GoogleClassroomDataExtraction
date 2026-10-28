@@ -44,10 +44,20 @@ else:
             st.dataframe(grade_table.TABLE)
 
         st.write("## exportar")
-        title = st.text_input(label="insira o titulo da planilha", value="planilha de notas")
+        title = st.text_input(
+            label="insira o titulo da planilha",
+            value="planilha de notas"
+        )
+
+        link = st.text_input(
+            label="insira o link da planilha",
+            value=""
+        )
+
+        st.write("lembre de compartilhar a planilha com o seguinte email: <INSIRA O EMAIL> \n")
         if st.button("export to google sheet") and str(title).strip() != "":
             # and google_sheet_link:
-            grade_table.exportTableToGoogleSheets(sheet_title=title)
+            grade_table.exportTableToGoogleSheets(sheet_title=title, google_sheet_link=link)
 
 
 
