@@ -1,6 +1,6 @@
 # Criador Automático de Planilha
 
-Este é um projeto em Python que automatiza a extração de notas de alunos do **Google Classroom** e exporta esses dados diretamente para uma planilha formatada no **Google Sheets**. Ele possui uma interface gráfica amigável construída com **Streamlit**, permitindo que os professores selecionem suas turmas e atividades com facilidade.
+Este é um projeto em Python que automatiza a extração de notas de alunos do Google Classroom(via API call) e exporta esses dados diretamente para uma planilha formatada no Google Sheets. Ele possui uma interface gráfica amigável construída com **Streamlit**, permitindo que os professores selecionem suas turmas e atividades com facilidade.
 
 ## Funcionalidades
 
