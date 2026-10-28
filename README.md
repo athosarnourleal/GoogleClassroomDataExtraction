@@ -79,7 +79,7 @@ streamlit run interface/app.py
 
 O seu navegador padrão abrirá automaticamente na página da aplicação (geralmente em `http://localhost:8501`).
 
-## 💡 Como Usar o App
+## Como Usar o App
 
 1. Clique em **"conectar"** para autenticar com sua conta do Google (para ter acesso ao Classroom).
 2. Escolha a turma (curso) desejada na lista de cursos disponíveis e clique em **"confirmar"**.
