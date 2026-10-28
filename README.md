@@ -47,6 +47,8 @@ Crie um ambiente virtual, ative-o e instale as dependências (você precisará c
 # Crie e ative o ambiente virtual
 python -m venv .venv
 source .venv/bin/activate  # No Windows: .venv\Scripts\activate
+pip install -r ./requirements.txt
+
 
 # Instale os pacotes principais
 pip install streamlit pandas numpy gspread google-api-python-client google-auth-httplib2 google-auth-oauthlib python-dotenv
