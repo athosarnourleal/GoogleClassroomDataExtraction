@@ -16,17 +16,16 @@ SCOPES = [
     "https://www.googleapis.com/auth/classroom.rosters.readonly"
 ]
 
-CREDENTIALS_FOLDER = Path(__file__).parent.parent / "google credentials"
-
-
 class GoogleClassroomAPIManager:
     def __init__(self):
+        # general data
         self.SERVICE = None
         self.AVAILABLE_COURSES = []
+
+        # course data
         self.COURSE = {"name": None, "id": None}
         self.COURSE_ACTIVITIES = None
         self.STUDENT_NAMES_FROM_ID = None
-        self.AVAILABLE_ACTIVITIES = []
 
     def connectToClassroomAPI(self):
         """
@@ -42,7 +41,7 @@ class GoogleClassroomAPIManager:
             if creds and creds.expired and creds.refresh_token:
                 creds.refresh(Request())
             else:
-                creds_path = CREDENTIALS_FOLDER / "credentials_client_google_classroom.json"
+                creds_path = Path(__file__).parent.parent / "google credentials" / "credentials_client_google_classroom.json"
 
                 flow = InstalledAppFlow.from_client_secrets_file(
                     str(creds_path), SCOPES
@@ -51,7 +50,7 @@ class GoogleClassroomAPIManager:
                 creds = flow.run_local_server(port=0)
 
             # Save the credentials for the next run
-            with open(CREDENTIALS_FOLDER / "token.json", "w") as token:
+            with open(Path(__file__).parent.parent / "google credentials" / "token.json", "w") as token:
                 token.write(creds.to_json())
 
         try:
@@ -74,8 +73,6 @@ class GoogleClassroomAPIManager:
         self.COURSE_ACTIVITIES = self.getActivities()
 
         self.STUDENT_NAMES_FROM_ID = self.loadStudents()
-
-        self.AVAILABLE_ACTIVITIES = self.COURSE_ACTIVITIES.keys()
 
     def getAvailableCourses(self) -> list:
         results = self.SERVICE.courses().list(pageSize= 10).execute()
@@ -140,6 +137,8 @@ class GoogleClassroomAPIManager:
         return activity_grades
 
 classroom = GoogleClassroomAPIManager()
+
+classroom.connectToClassroomAPI()
 
 
 

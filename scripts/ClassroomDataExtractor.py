@@ -57,30 +57,34 @@ class GradeTablePandas:
             [ Nome,  atividade 1,  atividade 2 ...  atividade N,  total ]
         """
 
-        if len(self.TABLE.index) == 0 or len(self.TABLE.columns) == 0:
+        if self.TABLE.empty:
             return "unable to export"
 
         sheet = connectToSpreadsheet(google_sheet_link)
 
         # table_cleaned = self.TABLE.fillna(0)
 
-
-        row_num = len(list(self.TABLE.index.array)) + 1
-        col_num = len(list(self.TABLE.columns.array)) + 3
-
         table_formatted = (
-                [["NOMES DOS ALUNOS", "PONTOS EXTRAS"] + list(self.TABLE.columns.array)+["SOMA ATIVIDADES"]] + # header
-                [[row, 0] + list(self.TABLE.loc[row]) + [str(f"=SOMA({rowcol_to_a1(rownum+1, 3)}:{rowcol_to_a1(rownum+1, col_num-1)})")] for rownum, row in enumerate(list(self.TABLE.index),start=1)]
+            [["NOMES DOS ALUNOS", "PONTOS EXTRAS"] + list(self.TABLE.columns.array)] + # header
+            [[row, 0] + list(self.TABLE.loc[row]) for row in list(self.TABLE.index)]
         )
+        table_formatted[0].append("SOMA ATIVIDADES")
+        table_formatted[0].append("NOTA PROVA")
+        table_formatted[0].append("NOTA TOTAL")
 
-        for row in table_formatted[1:]:
-            print(row)
+        row_num = len(list(table_formatted))
+        col_num = len(list(table_formatted[0]))
 
-        worksheet_title = sheet_title+"-"+str(datetime.datetime.now().strftime("%d/%m/%Y"))
+        for index,row in enumerate(table_formatted[1:], start= 2):
+            row.append(f"=SOMA({rowcol_to_a1(index, 3)}:{rowcol_to_a1(index, col_num-3)})") # soma das atividades
+            row.append("0") # empty data for test data
+            row.append(f"=SOMA({rowcol_to_a1(index, 2)};{rowcol_to_a1(index, col_num-2)};{rowcol_to_a1(index, col_num-1)})") # calculo da nota final( final = extra + ativ + prova )
+
+        print(table_formatted)
+
+        worksheet_title = sheet_title+"("+str(datetime.datetime.now().strftime("%d/%m/%Y"))+")"
 
         # delete previous instances to avoid errors
-
-
         if worksheet_title in [ws.title for ws in sheet.worksheets()]:
             # spreadsheet already exists
 
@@ -122,3 +126,7 @@ class GradeTablePandas:
         return True
 
 grade_table = GradeTablePandas()
+
+n = [
+    ['NOMES DOS ALUNOS', 'PONTOS EXTRAS', 'ATIVIDADE TESTE 2', 'ATIVIDADE TESTE 1', 'SOMA ATIVIDADES', 'NOTA PROVA'],
+    ['ALUNO JONAS'     , 0              , 0.0                , 100.0               , '=SOMA(C2:G2)'  , '0', '0']]
