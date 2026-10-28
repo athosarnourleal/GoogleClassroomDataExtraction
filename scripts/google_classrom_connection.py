@@ -15,26 +15,18 @@ SCOPES = [
     "https://www.googleapis.com/auth/classroom.student-submissions.students.readonly" ,
     "https://www.googleapis.com/auth/classroom.rosters.readonly"
 ]
-"""
-"https://www.googleapis.com/auth/classroom.courses.readonly 
-https://www.googleapis.com/auth/classroom.student-submissions.students.readonly 
-https://www.googleapis.com/auth/classroom.coursework.students.readonly 
-https://www.googleapis.com/auth/classroom.rosters.readonly"
 
-
-"https://www.googleapis.com/auth/classroom.courses.readonly",
-"https://www.googleapis.com/auth/classroom.student-submissions.students.readonly" ,
-"https://www.googleapis.com/auth/classroom.rosters.readonly"
-"""
 CREDENTIALS_FOLDER = Path(__file__).parent.parent / "google credentials"
 
 
 class GoogleClassroomAPIManager:
     def __init__(self):
         self.SERVICE = None
+        self.AVAILABLE_COURSES = []
         self.COURSE = {"name": None, "id": None}
         self.COURSE_ACTIVITIES = None
         self.STUDENT_NAMES_FROM_ID = None
+        self.AVAILABLE_ACTIVITIES = []
 
     def connectToClassroomAPI(self):
         """
@@ -64,10 +56,16 @@ class GoogleClassroomAPIManager:
 
         try:
             self.SERVICE = build("classroom", "v1", credentials=creds)
+
+            self.AVAILABLE_COURSES = self.getAvailableCourses()
+
+            if len(self.AVAILABLE_COURSES) == 1:
+                self.loadDataFromCourse(self.AVAILABLE_COURSES[0])
+
         except HttpError as error:
             raise  f"An error occurred: {error}"
 
-    def loadDataFromAPI(self, course_name: str):
+    def loadDataFromCourse(self, course_name: str):
         if self.SERVICE is None:
             raise Exception("unable to request data from a unconnected API.")
 
@@ -77,6 +75,8 @@ class GoogleClassroomAPIManager:
 
         self.STUDENT_NAMES_FROM_ID = self.loadStudents()
 
+        self.AVAILABLE_ACTIVITIES = self.COURSE_ACTIVITIES.keys()
+
     def getAvailableCourses(self) -> list:
         results = self.SERVICE.courses().list(pageSize= 10).execute()
 
@@ -84,8 +84,6 @@ class GoogleClassroomAPIManager:
 
     def loadStudents(self):
         students = self.SERVICE.courses().students().list(courseId=self.COURSE["id"]).execute().get("students", [])
-        # print("STUDENTS: ")
-        # print(students)
 
         return {student["userId"] : student["profile"]["name"]["fullName"] for student in students}
 
@@ -106,16 +104,18 @@ class GoogleClassroomAPIManager:
           }
         """
 
-        activities = self.SERVICE.courses().courseWork().list(courseId=self.COURSE["id"], pageSize=10).execute().get(
-            "courseWork", [])
+        activities = self.SERVICE.courses().courseWork().list(
+            courseId= self.COURSE["id"],
+            pageSize=10
+        ).execute().get("courseWork", [])
 
         return {str(a["title"]).strip().lower(): str(a["id"])    for a in activities }
 
     def getStudentGradesInActivity(self, coursework_name: str):
         """
-            extract grading indormation
+            extract grading information
         """
-        submissions = response = self.SERVICE.courses().courseWork().studentSubmissions().list(
+        submissions = self.SERVICE.courses().courseWork().studentSubmissions().list(
             courseId=self.COURSE["id"],
             courseWorkId=self.COURSE_ACTIVITIES[coursework_name],
             pageSize=10
@@ -125,7 +125,6 @@ class GoogleClassroomAPIManager:
 
         for sub in submissions:
             if "assignedGrade" in sub:
-                print(sub["assignedGrade"])
                 activity_grades.append(
                     (self.STUDENT_NAMES_FROM_ID[sub["userId"]], sub["assignedGrade"])
                 )
@@ -140,18 +139,7 @@ class GoogleClassroomAPIManager:
 
         return activity_grades
 
-
 classroom = GoogleClassroomAPIManager()
 
-if __name__ == "__main__":
-    classroom.connectToClassroomAPI()
-    classroom.loadDataFromAPI("Turma Teste")
-
-    from scripts.ClassroomDataExtractor import grade_table
-
-    for activity in classroom.COURSE_ACTIVITIES:
-        grade_table.loadActivityGrades(activity,classroom.getStudentGradesInActivity(activity))
-
-    print(grade_table.TABLE)
 
 

@@ -5,6 +5,8 @@ from pathlib import Path
 from google.oauth2.service_account import Credentials
 
 from dotenv import load_dotenv
+from gspread.utils import ValueInputOption
+
 load_dotenv()
 
 def connectToSpreadsheet(spreadsheet_link: str):
@@ -31,13 +33,14 @@ def connectToSpreadsheet(spreadsheet_link: str):
 def format_table(
         row_num: int,
         col_num: int,
-        sheet: gspread.spreadsheet.Spreadsheet
+        sheet: gspread.spreadsheet.Spreadsheet,
+        worksheet: gspread.spreadsheet.Worksheet
     ) -> None:
 
     position_range_header = gspread.utils.rowcol_to_a1(row=1, col=1) + ":" + gspread.utils.rowcol_to_a1(row=1, col=col_num)
 
     # format header
-    sheet.get_worksheet(0).format(position_range_header,
+    worksheet.format(position_range_header,
     {
             "verticalAlignment": "MIDDLE",
             "horizontalAlignment": "CENTER",
@@ -59,8 +62,9 @@ def format_table(
     )
 
     position_range = gspread.utils.rowcol_to_a1(row= 2  , col=1) + ":" + gspread.utils.rowcol_to_a1(row=row_num, col=col_num)
+
     # format rows
-    sheet.get_worksheet(0).format(position_range,
+    worksheet.format(position_range,
     {
             "verticalAlignment": "MIDDLE",
             "horizontalAlignment": "CENTER",
@@ -81,13 +85,13 @@ def format_table(
         }
     )
 
-    # resize header
+    # resize header row
     header_size_change_request = {
         "requests": [
             {
                 "updateDimensionProperties": {
                     "range": {
-                        "sheetId": sheet.get_worksheet(0).id,
+                        "sheetId": worksheet.id,
                         "dimension": "ROWS",
                         "startIndex": 0,
                         "endIndex": 1
@@ -108,7 +112,7 @@ def format_table(
             {
                 "updateDimensionProperties": {
                     "range": {
-                        "sheetId": sheet.get_worksheet(0).id,
+                        "sheetId": worksheet.id,
                         "dimension": "ROWS",
                         "startIndex": 1,
                         "endIndex": row_num
@@ -123,16 +127,16 @@ def format_table(
     }
     sheet.batch_update(row_size_change_request)
 
-    # resize the initial cols
+    # resize the initial columns
     col_size_change_request_names = {
         "requests": [
             {
                 "updateDimensionProperties": {
                     "range": {
-                        "sheetId": sheet.get_worksheet(0).id,
+                        "sheetId": worksheet.id,
                         "dimension": "COLUMNS",
                         "startIndex": 0,
-                        "endIndex": 2
+                        "endIndex": 1
                     },
                     "properties": {
                         "pixelSize": 300
@@ -150,9 +154,9 @@ def format_table(
             {
                 "updateDimensionProperties": {
                     "range": {
-                        "sheetId": sheet.get_worksheet(0).id,
+                        "sheetId": worksheet.id,
                         "dimension": "COLUMNS",
-                        "startIndex": 2,
+                        "startIndex": 1,
                         "endIndex": col_num
                     },
                     "properties": {
@@ -167,10 +171,10 @@ def format_table(
 
 def insertData(
         worksheet: gspread.worksheet.Worksheet,
-        data, # 2d array
+        data: list, # 2d array
     ) -> None:
     range_positions = "A1:" + gspread.utils.rowcol_to_a1(len(data), len(data[0]))
 
-    worksheet.update(data, range_positions)
+    worksheet.update(range_name= range_positions, values= data, value_input_option=ValueInputOption.user_entered)
 
 
