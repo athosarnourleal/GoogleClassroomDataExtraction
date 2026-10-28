@@ -18,10 +18,10 @@ class GradeTablePandas:
     @staticmethod
     def isEmpty(cell_value):
         if (
-                cell_value is np.nan or
-                cell_value == "" or
-                cell_value is list and len(cell_value) == 0 or
-                cell_value == 0
+            cell_value is np.nan or
+            cell_value == "" or
+            cell_value is list and len(cell_value) == 0 or
+            cell_value == 0
             ):
             return True
 
@@ -76,11 +76,14 @@ class GradeTablePandas:
         col_num = len(list(table_formatted[0]))
 
         for index,row in enumerate(table_formatted[1:], start= 2):
-            row.append(f"=SOMA({rowcol_to_a1(index, 3)}:{rowcol_to_a1(index, col_num-3)})") # soma das atividades
-            row.append("0") # empty data for test data
-            row.append(f"=SOMA({rowcol_to_a1(index, 2)};{rowcol_to_a1(index, col_num-2)};{rowcol_to_a1(index, col_num-1)})") # calculo da nota final( final = extra + ativ + prova )
+            # soma das atividades
+            row.append(f"=SOMA({rowcol_to_a1(index, 3)}:{rowcol_to_a1(index, col_num-3)})")
 
-        print(table_formatted)
+            # empty data for test data
+            row.append("0")
+
+            # calculo da nota final( extra + ativ + prova )
+            row.append(f"=SOMA({rowcol_to_a1(index, 2)};{rowcol_to_a1(index, col_num-2)};{rowcol_to_a1(index, col_num-1)})")
 
         worksheet_title = sheet_title+"("+str(datetime.datetime.now().strftime("%d/%m/%Y"))+")"
 
@@ -126,7 +129,3 @@ class GradeTablePandas:
         return True
 
 grade_table = GradeTablePandas()
-
-n = [
-    ['NOMES DOS ALUNOS', 'PONTOS EXTRAS', 'ATIVIDADE TESTE 2', 'ATIVIDADE TESTE 1', 'SOMA ATIVIDADES', 'NOTA PROVA'],
-    ['ALUNO JONAS'     , 0              , 0.0                , 100.0               , '=SOMA(C2:G2)'  , '0', '0']]
