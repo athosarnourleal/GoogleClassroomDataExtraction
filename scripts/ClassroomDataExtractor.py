@@ -1,8 +1,6 @@
-import csv
-from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from starlette import status
 
 from scripts.google_sheets_connection import format_table, connectToSpreadsheet, insertData
 
@@ -67,26 +65,25 @@ class GradeTablePandas:
 
         return True
 
-
 grade_table = GradeTablePandas()
 
-if __name__ == "__main__":
-
-    print(grade_table.TABLE)
-
-    foo = [("athos",10),("athos2", 20),("athos3", 300)]
-    grade_table.loadActivityGrades("foo atv", foo)
-
-    foo = [("athos",10),("athos2", 20),("athos3", 300),("athos4", 350)]
-    grade_table.loadActivityGrades("foo atv 2", foo)
-
-    print("\n\nagain.\n\n")
-
-    foo = [("athos4", 350)]
-    grade_table.loadActivityGrades("foo atv", foo)
-
-    print(list(grade_table.TABLE.index))
-    print("ATHOS4" in list(grade_table.TABLE.index))
-
-    # print("\n\n\n")
-    # print(grade_table.TABLE)
+# if __name__ == "__main__":
+#
+#     print(grade_table.TABLE)
+#
+#     foo = [("athos",10),("athos2", 20),("athos3", 300)]
+#     grade_table.loadActivityGrades("foo atv", foo)
+#
+#     foo = [("athos",10),("athos2", 20),("athos3", 300),("athos4", 350)]
+#     grade_table.loadActivityGrades("foo atv 2", foo)
+#
+#     print("\n\nagain.\n\n")
+#
+#     foo = [("athos4", 350)]
+#     grade_table.loadActivityGrades("foo atv", foo)
+#
+#     print(list(grade_table.TABLE.index))
+#     print("ATHOS4" in list(grade_table.TABLE.index))
+#
+#     # print("\n\n\n")
+#     # print(grade_table.TABLE)

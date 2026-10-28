@@ -7,6 +7,8 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from pathlib import Path
 
+import numpy as np
+
 # If modifying these scopes, delete the file token.json.
 SCOPES = [
     "https://www.googleapis.com/auth/classroom.courses.readonly",
@@ -29,7 +31,6 @@ CREDENTIALS_FOLDER = Path(__file__).parent.parent / "google credentials"
 
 class GoogleClassroomAPIManager:
     def __init__(self):
-
         self.SERVICE = None
         self.COURSE = {"name": None, "id": None}
         self.COURSE_ACTIVITIES = None
@@ -92,7 +93,6 @@ class GoogleClassroomAPIManager:
         courses = self.SERVICE.courses().list(pageSize=50).execute().get("courses", [])
 
         for c in courses:
-            print(c["name"] + " -> " + c["id"])
             if c["name"] == course_name:
                 return c["id"]
 
@@ -115,55 +115,43 @@ class GoogleClassroomAPIManager:
         """
             extract grading indormation
         """
-        response = self.SERVICE.courses().courseWork().studentSubmissions().list(
+        submissions = response = self.SERVICE.courses().courseWork().studentSubmissions().list(
             courseId=self.COURSE["id"],
             courseWorkId=self.COURSE_ACTIVITIES[coursework_name],
             pageSize=10
-        ).execute()
+        ).execute().get("studentSubmissions", [])
 
-        print("\n",response,"\n", sep="")
-
-        submissions = response.get("studentSubmissions", [])
+        activity_grades = []
 
         for sub in submissions:
-            print(sub)
-            print(sub["userId"])
-            print(self.STUDENT_NAMES_FROM_ID[sub["userId"]])
-
             if "assignedGrade" in sub:
                 print(sub["assignedGrade"])
+                activity_grades.append(
+                    (self.STUDENT_NAMES_FROM_ID[sub["userId"]], sub["assignedGrade"])
+                )
+            elif "draftGrade" in sub:
+                activity_grades.append(
+                    (self.STUDENT_NAMES_FROM_ID[sub["userId"]], sub["draftGrade"])
+                )
             else:
-                print("assigned grade not found")
+                activity_grades.append(
+                    (self.STUDENT_NAMES_FROM_ID[sub["userId"]], np.nan)
+                )
 
-            if "draftGrade" in sub:
-                print(sub["draftGrade"])
-            else:
-                print("draft grade not found")
-
-
+        return activity_grades
 
 
 classroom = GoogleClassroomAPIManager()
 
 if __name__ == "__main__":
     classroom.connectToClassroomAPI()
-
-    print(classroom.getAvailableCourses())
-
     classroom.loadDataFromAPI("Turma Teste")
 
-    print(classroom.STUDENT_NAMES_FROM_ID)
-    print(classroom.COURSE_ACTIVITIES)
+    from scripts.ClassroomDataExtractor import grade_table
 
-    classroom.getStudentGradesInActivity("atividade teste 1")
-    classroom.getStudentGradesInActivity("atividade teste 2")
+    for activity in classroom.COURSE_ACTIVITIES:
+        grade_table.loadActivityGrades(activity,classroom.getStudentGradesInActivity(activity))
 
-"""
-['Turma Teste']
-Turma Teste -> 869946068551
-{'108182077976741060636': 'Aluno Jonas'}
-{'atividade teste 2': '869946684832', 'atividade teste 1': '869946150463'}
-{'courseId': '869946068551', 'courseWorkId': '869946684832', 'id': 'Cg4IsrXW5qgZEKDr8-aoGQ', 'userId': '108182077976741060636', 'creationTime': '2026-09-30T11:41:55.023Z', 'updateTime': '2026-09-30T11:42:21.867Z', 'state': 'CREATED', 'late': True, 'draftGrade': 0, 'alternateLink': 'https://classroom.google.com/c/ODY5OTQ2MDY4NTUx/a/ODY5OTQ2Njg0ODMy/submissions/by-status/and-sort-last-name/student/ODY5OTQ2MjAyODAy', 'courseWorkType': 'ASSIGNMENT', 'assignmentSubmission': {'attachments': [{'driveFile': {'id': '1lCXoisMzw9KFMyK2RTFqq7ZRY2EyoXWd', 'alternateLink': 'https://drive.google.com/open?id=1lCXoisMzw9KFMyK2RTFqq7ZRY2EyoXWd'}}]}, 'submissionHistory': [{'stateHistory': {'state': 'CREATED', 'stateTimestamp': '2026-09-30T11:41:55.015Z', 'actorUserId': '108182077976741060636'}}]}
-108182077976741060636
-Aluno Jonas
-"""
+    print(grade_table.TABLE)
+
+
