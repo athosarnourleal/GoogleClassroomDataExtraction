@@ -1,5 +1,3 @@
-from pprint import pprint
-
 import numpy as np
 import pandas as pd
 import datetime
@@ -121,8 +119,6 @@ class GradeTablePandas:
             )
 
         format_table(row_num=row_num, col_num=col_num, sheet= sheet, worksheet= worksheet)
-
-        pprint(table_formatted)
 
         insertData(worksheet, table_formatted)
 

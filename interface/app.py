@@ -54,7 +54,7 @@ else:
             value=""
         )
 
-        st.write("lembre de compartilhar a planilha com o seguinte email: <INSIRA O EMAIL> \n")
+        st.write("lembre de compartilhar a planilha com o seguinte email: \n <insira o email> \n")
         if st.button("export to google sheet") and str(title).strip() != "":
             # and google_sheet_link:
             grade_table.exportTableToGoogleSheets(sheet_title=title, google_sheet_link=link)
