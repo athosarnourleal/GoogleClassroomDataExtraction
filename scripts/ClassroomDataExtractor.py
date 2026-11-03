@@ -25,21 +25,20 @@ class GradeTablePandas:
 
         return False
 
-    def loadActivityGrades(self, activity_name: str, grades_data: list[tuple]):
+    def loadActivityGrades(
+            self,
+            activity_name: str,
+            grades_data: list[tuple]
+        ):
+
         activity_name = activity_name.strip().upper()
 
         for student_name,grade in grades_data:
             student_name = student_name.strip().upper()
+            self.TABLE.at[student_name, activity_name] = grade
 
-            if student_name in list(self.TABLE.index) and activity_name in self.TABLE.columns:
-                previous = self.TABLE.at[student_name, activity_name]
+        # self.TABLE.sort_index()
 
-                # update value if its worth it
-                if self.isEmpty(previous) or not self.isEmpty(grade):
-                    self.TABLE.at[student_name, activity_name] = grade
-            else:
-                # if does not exist then just insert it
-                self.TABLE.at[student_name, activity_name] = grade
 
     def clearTable(self):
         self.TABLE = pd.DataFrame({})
@@ -60,11 +59,11 @@ class GradeTablePandas:
 
         sheet = connectToSpreadsheet(google_sheet_link)
 
-        # table_cleaned = self.TABLE.fillna(0)
+        table_cleaned = self.TABLE.fillna("")
 
         table_formatted = (
-            [["NOMES DOS ALUNOS", "PONTOS EXTRAS"] + list(self.TABLE.columns.array)] + # header
-            [[row, 0] + list(self.TABLE.loc[row]) for row in list(self.TABLE.index)]
+            [["NOMES DOS ALUNOS", "PONTOS EXTRAS"] + list(table_cleaned.columns.array)] + # header
+            [[row, 0] + list(table_cleaned.loc[row]) for row in list(table_cleaned.index)]
         )
         table_formatted[0].append("SOMA ATIVIDADES")
         table_formatted[0].append("NOTA PROVA")

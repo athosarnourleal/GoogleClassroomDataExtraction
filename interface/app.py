@@ -1,6 +1,7 @@
 import streamlit as st
 from pathlib import Path
 import sys
+
 sys.path.append(str(Path(__file__).parent.parent))
 
 from scripts.ClassroomDataExtractor import grade_table
@@ -23,25 +24,37 @@ elif classroom.COURSE["name"] is None:
         classroom.loadDataFromCourse(str(chosen_course))
         st.rerun()
 else:
+    if st.button(label="selecionar outro curso"):
+        classroom.unloadDataFromCourse()
+        st.rerun()
+
+    st.write(f"### {classroom.COURSE["name"]}")
+
     col1, col2 = st.columns(2)
     with col1:
         st.write("### escolha as atividades que serao carregadas")
 
-        activity_checkboxes = [st.checkbox(label= activity_name) for activity_name in list(classroom.COURSE_ACTIVITIES)]
+        activity_checkboxes = [st.checkbox(label= activity_obj[0], key="checkbox #"+str(index)) for index,activity_obj in enumerate(list(classroom.COURSE_ACTIVITIES))]
 
         if st.button("carregar dados de notas"):
-            grade_table.clearTable()
-
             for index,checkbox in enumerate(activity_checkboxes):
                 if checkbox:
-                    activity_name = list(classroom.COURSE_ACTIVITIES)[index]
-                    grade_table.loadActivityGrades(activity_name, classroom.getStudentGradesInActivity(activity_name))
+                    activity_name = classroom.COURSE_ACTIVITIES[index][0]
+
+                    if activity_name not in grade_table.TABLE.columns: # avoid giving time recreating existing collumns
+                        grade_table.loadActivityGrades(activity_name, classroom.getStudentGradesInActivity(course_index= index))
 
     if not grade_table.TABLE.empty:
         with col2:
             # add part to join activities
             st.write("## tabela")
             st.dataframe(grade_table.TABLE)
+
+            if st.button(label="limpar table"):
+                grade_table.clearTable()
+
+            if st.button(label="printar"):
+                print(grade_table.TABLE)
 
         st.write("## exportar")
         title = st.text_input(
@@ -58,7 +71,3 @@ else:
         if st.button("export to google sheet") and str(title).strip() != "":
             # and google_sheet_link:
             grade_table.exportTableToGoogleSheets(sheet_title=title, google_sheet_link=link)
-
-
-
-

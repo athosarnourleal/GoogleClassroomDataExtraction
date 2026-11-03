@@ -160,7 +160,7 @@ def format_table(
                         "endIndex": col_num
                     },
                     "properties": {
-                        "pixelSize": 200
+                        "pixelSize": 350
                     },
                     "fields": "pixelSize"
                 }
